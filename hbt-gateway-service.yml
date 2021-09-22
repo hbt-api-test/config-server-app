@@ -1,0 +1,82 @@
+resilience4j:
+  circuitbreaker:
+      configs:
+        defecto:
+          sliding-window-size: 6
+          failure-rate-threshold: 50
+          wait-duration-in-open-state: 20s
+          permitted-number-of-calls-in-half-open-state: 4
+          slow-call-rate-thresold: 50
+          slow-call-duration-thresold: 2s
+      instances:
+        personas:
+          base-config: defecto
+  timelimeter:
+      configs:
+        defecto:
+          timeout-duration: 2s
+      instances:
+        personas:
+          base-config: defecto
+spring:
+  config:
+     import=optional:configserver:
+  security:
+     oauth2:
+       resourceserver:
+         jwt:
+           #jwk-set-uri: http://localhost:8080/auth/realms/hbt-prototype-real/.well-known/jwks.json
+          jwk-set-uri: http://localhost:8080/auth/realms/hbt-prototype-real/protocol/openid-connect/certs
+  application:
+    name: HBT-GATEWAY-SERVICE
+  sleuth:
+    sampler:
+      probability: 1.0
+  zipkin:
+    baseUrl: http://localhost:9411/
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+    gateway:
+#      default-filters: TokenRelay
+      discovery:
+        locator:
+          enable: true
+      routes:
+        - id: order-service
+          uri: lb://HBT-ORDER-SERVICE
+          predicates:
+            - Path=/api/order/**
+#          filters:
+#            - name: CircuitBreaker
+#              args:
+#                name: order-service
+#                fallbackuri: forward:/orderFallback
+        - id: payment-service
+          uri: lb://HBT-PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payment/**
+#          filters:
+#            - name: CircuitBreaker
+#              args:
+#                name: payment-service
+#                fallbackuri: forward:/paymentFallback
+        - id: persona-service
+          uri: lb://PERSONA-API-SERVICE
+          predicates:
+            - Path=/api/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: persona-service
+                fallbackuri: forward:/personasFallback
+
+        - id: procesos-programados-service
+          uri: http://localhost:8080/
+          predicates:
+            - Path=/procesos-programados-rest/rest/**
+
+server:
+  port: 8180
