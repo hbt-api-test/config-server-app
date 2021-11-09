@@ -47,8 +47,9 @@ spring:
         - id: hbt-cliente-service
           uri: lb://HBT-CLIENTE-SERVICE
           predicates:
-            - Path=/**
-#          filters:
+            - Path=/api/**
+          filters:
+            - StripPrefix=1
 #            - name: CircuitBreaker
 #              args:
 #                name: order-service
@@ -65,9 +66,9 @@ spring:
         - id: hbt-upload-service
           uri: lb://HBT-UPLOAD-SERVICE
           predicates:
-            - Path=/**
-#          filters:
-#            - StripPrefix=1
+            - Path=/api/up/**
+          filters:
+            - StripPrefix=2
 #            - name: CircuitBreaker
 #              args:
 #                name: persona-service
