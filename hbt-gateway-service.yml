@@ -65,7 +65,7 @@ spring:
         - id: hbt-upload-service
           uri: lb://HBT-UPLOAD-SERVICE
           predicates:
-            - Path=/upload/**
+            - Path=/**
 #          filters:
 #            - StripPrefix=1
 #            - name: CircuitBreaker
