@@ -44,39 +44,40 @@ spring:
         locator:
           enable: true
       routes:
-        - id: order-service
-          uri: lb://HBT-ORDER-SERVICE
+        - id: hbt-cliente-service
+          uri: lb://HBT-CLIENTE-SERVICE
           predicates:
-            - Path=/api/order/**
+            - Path=/**
 #          filters:
 #            - name: CircuitBreaker
 #              args:
 #                name: order-service
 #                fallbackuri: forward:/orderFallback
-        - id: payment-service
-          uri: lb://HBT-PAYMENT-SERVICE
+        - id: hbt-seguridad-service
+          uri: lb://HBT-SEGURIDAD-SERVICE
           predicates:
-            - Path=/api/payment/**
+            - Path=/**
 #          filters:
 #            - name: CircuitBreaker
 #              args:
 #                name: payment-service
 #                fallbackuri: forward:/paymentFallback
-        - id: persona-service
-          uri: lb://PERSONA-API-SERVICE
+        - id: hbt-upload-service
+          uri: lb://HBT-UPLOAD-SERVICE
           predicates:
-            - Path=/api/**
-          filters:
-            - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: persona-service
-                fallbackuri: forward:/personasFallback
+            - Path=/upload/**
+#          filters:
+#            - StripPrefix=1
+#            - name: CircuitBreaker
+#              args:
+#                name: persona-service
+#                fallbackuri: forward:/personasFallback
 
-        - id: procesos-programados-service
-          uri: http://localhost:8080/
-          predicates:
-            - Path=/procesos-programados-rest/rest/**
-
+#        - id: procesos-programados-service
+#          uri: lb://PROCESOS-PROGRAMADOS-SERVICE
+#          predicates:
+#            - Path=/procesos-programados-rest/rest/**
+#          filters:
+#            - StripPrefix=2
 server:
   port: 8180
