@@ -66,13 +66,14 @@ spring:
         - id: hbt-upload-service
           uri: lb://HBT-UPLOAD-SERVICE
           predicates:
-            - Path=/api/up/**
+            - Path=/api/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
 #            - name: CircuitBreaker
 #              args:
-#                name: persona-service
-#                fallbackuri: forward:/personasFallback
+#                name: order-service
+#                fallbackuri: forward:/orderFallback
+
 
 #        - id: procesos-programados-service
 #          uri: lb://PROCESOS-PROGRAMADOS-SERVICE
