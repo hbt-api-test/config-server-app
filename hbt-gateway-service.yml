@@ -23,8 +23,23 @@ spring:
     name: HBT-GATEWAY-SERVICE
   config:
     import=optional:configserver:
+  oauth2:
+    client:
+      provider:
+        my-keycloak-provider:
+          issuer-uri: http://localhost:8080/auth/realms/hbt-gateway-access
+      registration:
+        keycloak-spring-gateway-client:
+          provider:  my-keycloak-provider
+          client-id: hbt-spring-gateway-application
+          client-secret: irLEtJqd4Fp3VddUnbvsigVKzeQGBXP4
+          authorization-grant-type: authorization_code
+          redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+
   cloud:
     gateway:
+      default-filters:
+        - TokenRelay
       discovery:
         locator:
           enable: true
@@ -80,6 +95,19 @@ spring:
 #            - StripPrefix=2
 server:
   port: 8180
+
+logging:
+  level:
+    org:
+      springframework:
+        security:
+          web: DEBUG
+          
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 eureka:
   instance:
