@@ -1,45 +1,45 @@
 resilience4j:
   circuitbreaker:
-      configs:
-        defecto:
-          sliding-window-size: 6
-          failure-rate-threshold: 50
-          wait-duration-in-open-state: 20s
-          permitted-number-of-calls-in-half-open-state: 4
-          slow-call-rate-thresold: 50
-          slow-call-duration-thresold: 2s
-      instances:
-        personas:
-          base-config: defecto
+    configs:
+      defecto:
+        sliding-window-size: 6
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 4
+        slow-call-rate-thresold: 50
+        slow-call-duration-thresold: 2s
+    instances:
+      cliente:
+        base-config: defecto
   timelimeter:
-      configs:
-        defecto:
-          timeout-duration: 2s
-      instances:
-        personas:
-          base-config: defecto
+    configs:
+      defecto:
+        timeout-duration: 2s
+    instances:
+      cliente:
+        base-config: defecto
 spring:
-  config:
-     import=optional:configserver:
-  security:
-     oauth2:
-       resourceserver:
-         jwt:
-           #jwk-set-uri: http://localhost:8080/auth/realms/hbt-prototype-real/.well-known/jwks.json
-          jwk-set-uri: http://localhost:8080/auth/realms/hbt-prototype-real/protocol/openid-connect/certs
   application:
     name: HBT-GATEWAY-SERVICE
-  sleuth:
-    sampler:
-      probability: 1.0
-  zipkin:
-    baseUrl: http://localhost:9411/
+  config:
+    import=optional:configserver:
+  oauth2:
+    client:
+      provider:
+        my-keycloak-provider:
+          issuer-uri: http://localhost:8080/auth/realms/hbt-gateway-access
+      registration:
+        keycloak-spring-gateway-client:
+          provider:  my-keycloak-provider
+          client-id: hbt-spring-gateway-application
+          client-secret: irLEtJqd4Fp3VddUnbvsigVKzeQGBXP4
+          authorization-grant-type: authorization_code
+          redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+
   cloud:
-    loadbalancer:
-      ribbon:
-        enabled: false
     gateway:
-#      default-filters: TokenRelay
+      default-filters:
+        - TokenRelay
       discovery:
         locator:
           enable: true
@@ -47,31 +47,45 @@ spring:
         - id: hbt-cliente-service
           uri: lb://HBT-CLIENTE-SERVICE
           predicates:
-            - Path=/**
-#          filters:
+            - Path=/hbt/cliente/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cliente
+                statusCodes: 500
+                fallbackUri: forward:/api/
+            - StripPrefix=2
+            - name: Hbt
+              args:
+                message: Hola, este es el mensaje personalizado
+                cokieName: usuario
+                cokieValue: jcsolis
+        #            - name: CircuitBreaker
+        #              args:
+        #                name: order-service
+        #                fallbackuri: forward:/orderFallback
+        - id: hbt-seguridad-service
+          uri: lb://HBT-SEGURIDAD-SERVICE
+          predicates:
+            - Path=/hbt/seguridad/**
+          filters:
+            - StripPrefix=2
+        #          filters:
+        #            - name: CircuitBreaker
+        #              args:
+        #                name: payment-service
+        #                fallbackuri: forward:/paymentFallback
+        - id: hbt-upload-service
+          uri: lb://HBT-UPLOAD-SERVICE
+          predicates:
+            - Path=/hbt/upload/**
+          filters:
+            - StripPrefix=2
 #            - name: CircuitBreaker
 #              args:
 #                name: order-service
 #                fallbackuri: forward:/orderFallback
-        - id: hbt-seguridad-service
-          uri: lb://HBT-SEGURIDAD-SERVICE
-          predicates:
-            - Path=/**
-#          filters:
-#            - name: CircuitBreaker
-#              args:
-#                name: payment-service
-#                fallbackuri: forward:/paymentFallback
-        - id: hbt-upload-service
-          uri: lb://HBT-UPLOAD-SERVICE
-          predicates:
-            - Path=/upload/**
-#          filters:
-#            - StripPrefix=1
-#            - name: CircuitBreaker
-#              args:
-#                name: persona-service
-#                fallbackuri: forward:/personasFallback
+
 
 #        - id: procesos-programados-service
 #          uri: lb://PROCESOS-PROGRAMADOS-SERVICE
@@ -81,3 +95,25 @@ spring:
 #            - StripPrefix=2
 server:
   port: 8180
+
+logging:
+  level:
+    org:
+      springframework:
+        security:
+          web: DEBUG
+          
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:5000/eureka
