@@ -22,6 +22,8 @@ spring:
       discovery:
         locator:
           enable: true
+      default-filters:
+        - TokenRelay
       routes:
         - id: hbt-cliente-service
           uri: lb://HBT-CLIENTE-SERVICE
